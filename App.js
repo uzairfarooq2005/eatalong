@@ -10,8 +10,6 @@ export default function () {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="login" component={Login} />
-        <Stack.Screen name="profile" component={Profile} />
       </Stack.Navigator>
     </NavigationContainer>
   );
