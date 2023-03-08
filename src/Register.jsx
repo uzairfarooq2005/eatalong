@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TextInput,
@@ -6,22 +6,18 @@ import {
   Button,
   TouchableOpacity,
   Text,
+  Image,
 } from "react-native";
 import * as EmailValidator from "email-validator";
 import { Camera, CameraType } from "expo-camera";
 function Register() {
   // depend the whole form is filled or not
   const [isValid, setIsValid] = useState(false);
+
+  const cameraRef = useRef();
+  const [profilePicUri, setProfilePicUri] = useState("");
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions();
-
-  requestPermission();
-
-  function toggleCameraType() {
-    setType((current) =>
-      current === CameraType.back ? CameraType.front : CameraType.back
-    );
-  }
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -79,9 +75,38 @@ function Register() {
     setIsValid(true);
   };
 
+  const onTakePicturePress = () => {
+    // check if camera is working not fine then just dont do anything
+    if (cameraRef.current === undefined) {
+      return;
+    }
+
+    cameraRef.current
+      .takePictureAsync()
+      .then((response) => {
+        console.log(response);
+        // check if the path of picture exists then take it to the state
+        if (response.uri !== undefined) {
+          setProfilePicUri(response.uri);
+        }
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.form}>
+        <Camera ref={cameraRef} style={styles.camera} type={type}>
+          <View style={styles.cameraButtonView}>
+            <TouchableOpacity
+              style={styles.cameraButton}
+              onPress={onTakePicturePress}
+            ></TouchableOpacity>
+          </View>
+        </Camera>
+        <Image style={styles.profilePicImg} source={{ uri: profilePicUri }} />
         <TextInput
           style={styles.inputBox}
           placeholder={"first name"}
@@ -113,15 +138,7 @@ function Register() {
           onPress={onSubmitPress}
           disabled={isValid === false}
         />
-        <Camera style={styles.camera} type={type}>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
-              <Text style={styles.text}>Flip Camera</Text>
-            </TouchableOpacity>
-          </View>
-        </Camera>
       </View>
-      <View style={styles.bottomBox}></View>
     </View>
   );
 }
@@ -143,9 +160,26 @@ const styles = StyleSheet.create({
     margin: 5,
     borderRadius: 10,
   },
+  camera: { width: "100%", height: 200 },
 
-  bottomBox: {
-    flex: 0.3,
+  cameraButtonView: {
+    width: "100%",
+    height: 200,
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
-  camera: { margin: 10, width: "100%", height: 200 },
+
+  cameraButton: {
+    width: 60,
+    height: 60,
+    marginBottom: 5,
+    borderRadius: 30,
+    backgroundColor: "white",
+  },
+  profilePicImg: {
+    width: 100,
+    height: 100,
+    margin: 5,
+    borderRadius: 50,
+  },
 });
